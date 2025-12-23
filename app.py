@@ -2,6 +2,8 @@ from flask import Flask, render_template, request
 from openpyxl import Workbook, load_workbook
 import os
 from datetime import datetime
+import requests
+
 
 app = Flask(__name__)
 
@@ -29,18 +31,31 @@ def save_to_excel(data):
 def home():
     return render_template("index.html")
 
+import requests
+
 @app.route("/register", methods=["POST"])
 def register():
-    name = request.form["name"]
-    phone = request.form["phone"]
-    email = request.form["email"]
-    link = request.form["link"]
+    name = request.form.get("name")
+    phone = request.form.get("phone")
+    email = request.form.get("email")
+    link = request.form.get("link")
 
-    time_now = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+    google_script_url = "https://script.google.com/macros/s/AKfycbxLiLZFJGiPobVRyrJOOC5W9LdHJCoTWIjCiIA-hHe7YemHeMhOFGKk75lDRQP4gacw/exec"
 
-    save_to_excel([time_now, name, phone, email, link])
+    payload = {
+        "name": name,
+        "phone": phone,
+        "email": email,
+        "link": link
+    }
 
-    return render_template("success.html", name=name)
+    try:
+        requests.post(google_script_url, json=payload, timeout=10)
+        return render_template("success.html", name=name)
+    except Exception as e:
+        return "Có lỗi xảy ra, vui lòng thử lại"
+
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    app.run(host="0.0.0.0", port=10000)
+
